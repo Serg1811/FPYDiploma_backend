@@ -20,3 +20,5 @@ settings_local.py
 
 .env
 .env.db
+
+.gitignore

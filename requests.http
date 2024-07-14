@@ -1,0 +1,90 @@
+# примеры API-запросов
+
+@baseUrl = http://localhost:8000/
+@tokenA1 = Token 751aafabd9d4574dbc1ef816508bd2fdc937fc15
+# @tokenA2 = Token 408ffc282e844e53cea6d714c3553bf81827a6c4
+@tokenU2 =  Token 3df1e5ce8cf8e1ad89fd12c4e0a39b39b6923b68
+
+# создания пользоватиля
+
+POST {{baseUrl}}/api/v1/users/
+Content-Type: application/json
+
+{
+  "email" : "u4@user.com",
+  "username": "u4",
+  "password": "u0000004"
+}
+
+###
+
+# Получить токен
+
+POST {{baseUrl}}auth/token/login/
+Content-Type: application/json
+
+{
+  "username": "u2",
+  "password": "u0000002"
+}
+
+###
+
+# Получить токен superuser
+
+POST {{baseUrl}}auth/token/login/
+Content-Type: application/json
+
+{
+  "username": "superuser",
+  "password": "superuser"
+}
+
+###
+
+# GET u2
+
+GET {{baseUrl}}/api/v1/users/
+Content-Type: application/json
+Authorization: {{tokenU2}}
+
+###
+
+# GET superuser
+
+GET {{baseUrl}}/api/v1/users/
+Content-Type: application/json
+Authorization: {{tokenA1}}
+
+
+###
+
+# GET u2
+
+GET {{baseUrl}}/api/v1/users/me
+Content-Type: application/json
+Authorization: {{tokenU2}}
+
+###
+
+# GET superuser
+
+GET {{baseUrl}}/api/v1/users/me
+Content-Type: application/json
+Authorization: {{tokenA1}}
+
+###
+
+# DELETE u2
+
+DELETE {{baseUrl}}/api/v1/users/me
+Content-Type: application/json
+Authorization: {{tokenU2}}
+
+###
+
+# DELETE superuser
+
+DELETE {{baseUrl}}/api/v1/users/4
+Content-Type: application/json
+Authorization: {{tokenA1}}
