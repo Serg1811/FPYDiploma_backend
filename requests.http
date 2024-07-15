@@ -1,9 +1,37 @@
 # примеры API-запросов
 
 @baseUrl = http://localhost:8000/
-@tokenA1 = Token 751aafabd9d4574dbc1ef816508bd2fdc937fc15
+@tokenA001 = Token b65367c871a6f5f856cf3750e47c64c71f40a2a2
 # @tokenA2 = Token 408ffc282e844e53cea6d714c3553bf81827a6c4
-@tokenU2 =  Token 3df1e5ce8cf8e1ad89fd12c4e0a39b39b6923b68
+@tokenU001 =  Token 3d3a71b1e2c18d4d829e36f18ecb8073642e179f
+@tokenU002 =  Token f5fcd8909803ea3d3ebfb5dc1251c1f5a2579249
+@tokenU003 =  Token 8a0c8450f08f9eb74b75e99349575a3b78e00f12
+
+# Получить токен
+
+POST {{baseUrl}}auth/token/login/
+Content-Type: application/json
+
+{
+  "username": "superuser",
+  "password": "superuser"
+}
+
+###
+
+# создания пользоватиля
+
+GET {{baseUrl}}/api/v1/users/
+# Content-Type: application/json
+# Authorization: {{tokenA1}}
+
+# {
+#   "email" : "u2@user.com",
+#   "username": "u2",
+#   "password": "_U0000002"
+# }
+
+###
 
 # создания пользоватиля
 
@@ -11,9 +39,10 @@ POST {{baseUrl}}/api/v1/users/
 Content-Type: application/json
 
 {
-  "email" : "u4@user.com",
-  "username": "u4",
-  "password": "u0000004"
+  "email" : "u012@user.com",
+  "username": "u012",
+  "password": "Serg18!!",
+  "is_staff": true
 }
 
 ###
@@ -24,8 +53,32 @@ POST {{baseUrl}}auth/token/login/
 Content-Type: application/json
 
 {
-  "username": "u2",
-  "password": "u0000002"
+  "username": "u001",
+  "password": "Serg18!!"
+}
+
+###
+
+# Получить токен
+
+GET {{baseUrl}}auth/token/login/
+Content-Type: application/json
+
+{
+  "username": "u002",
+  "password": "Serg18!!"
+}
+
+###
+
+# Получить токен
+
+GET {{baseUrl}}auth/token/login/
+Content-Type: application/json
+
+{
+  "username": "superuser",
+  "password": "superuser"
 }
 
 ###
@@ -46,45 +99,64 @@ Content-Type: application/json
 
 GET {{baseUrl}}/api/v1/users/
 Content-Type: application/json
-Authorization: {{tokenU2}}
+Authorization: {{tokenA001}}
+
+###
+
+# GET u003
+
+GET {{baseUrl}}/api/v1/users/me/
+Content-Type: application/json
+Authorization: {{tokenU003}}
 
 ###
 
 # GET superuser
 
-GET {{baseUrl}}/api/v1/users/
+GET {{baseUrl}}/api/v1/users/2
 Content-Type: application/json
-Authorization: {{tokenA1}}
-
-
-###
-
-# GET u2
-
-GET {{baseUrl}}/api/v1/users/me
-Content-Type: application/json
-Authorization: {{tokenU2}}
-
-###
-
-# GET superuser
-
-GET {{baseUrl}}/api/v1/users/me
-Content-Type: application/json
-Authorization: {{tokenA1}}
+Authorization: {{tokenA001}}
 
 ###
 
 # DELETE u2
 
-DELETE {{baseUrl}}/api/v1/users/me
+DELETE {{baseUrl}}/api/v1/users/me/
 Content-Type: application/json
-Authorization: {{tokenU2}}
+Authorization: {{tokenU002}}
+
+{
+  "current_password": "Serg18!!"
+}
 
 ###
 
-# DELETE superuser
+# GET получить список файлов
 
-DELETE {{baseUrl}}/api/v1/users/4
+get {{baseUrl}}/api/v1/files/
 Content-Type: application/json
-Authorization: {{tokenA1}}
+Authorization: {{tokenU001}}
+
+###
+
+# GET Получить список файлов с фильтрацией
+
+get {{baseUrl}}/api/v1/files/?q=3
+Content-Type: application/json
+Authorization: {{tokenU001}}
+
+###
+
+# POST получить файл для скачивания
+
+post {{baseUrl}}/api/v1/files/43/download/
+Content-Type: application/json
+Authorization: {{tokenU001}}
+
+###
+
+# GET получить информацию по id файла
+
+get {{baseUrl}}/api/v1/files/43/
+Content-Type: application/json
+Authorization: {{tokenU001}}

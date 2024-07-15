@@ -1,10 +1,14 @@
 import mimetypes
 import logging
 
-from django.http import FileResponse
+from django.http import FileResponse, HttpResponse
 from django.utils.timezone import now
-from rest_framework import viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets, generics
+from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
+from rest_framework.filters import SearchFilter
+
 
 from src.cloud.models import UserFiles
 from src.cloud.permisions import IsOwnerOrAdmin
@@ -18,29 +22,33 @@ class FileViewSet(viewsets.ModelViewSet):
     queryset = UserFiles.objects.all()
     serializer_class = UserFilesSerializer
     permission_classes = [IsOwnerOrAdmin]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ['user', 'name']
+    search_fields = ['name', 'comment']
 
     def perform_create(self, serializer):
         file = self.request.FILES['file']
-        comment = self.request.POST.get('comment', None)
-        rename = self.request.POST.get('rename', None)
-        filename = rename if rename else file.name
-        logger.info(f"Загрузка файла. Имя файла: {file.name}, переименование: {rename}, коммент: {comment}")
-        serializer.save(name=filename, size=file.size, owner=self.request.user, comment=comment)
+        filename = file.name
+        user = self.request.user
+
+        logger.info(f"Загрузка файла. Имя файла: {file.name}")
+        serializer.save(file=file, name=filename, size=file.size, type=file.content_type, user=user)
 
     def perform_destroy(self, instance):
         logger.info(f"Удаление файла {instance.name}")
         super().perform_destroy(instance)
 
     def get_queryset(self):
-        user = self.request.user
-        requested_user_id = self.request.query_params.get('id', None)
-        if requested_user_id:
-            return UserFiles.objects.filter(owner=requested_user_id).order_by('id')
-        return UserFiles.objects.filter(owner=user).order_by('id')
+        requested_user = self.request.user
+        if requested_user.is_staff:
+            return UserFiles.objects.order_by('id')
+        return UserFiles.objects.filter(user=requested_user).order_by('id')
+
 
     def get_object(self):
         pk = self.kwargs.get('pk')
         obj = get_object_or_404(UserFiles, pk=pk)
+        logger.info(obj)
         self.check_object_permissions(self.request, obj)
         return obj
 
@@ -52,13 +60,31 @@ class FileViewSet(viewsets.ModelViewSet):
             args['name'] = name
         serializer.save(**args)
 
-    def retrieve(self, request, *args, **kwargs):
+
+    @action(detail=True, methods=['post'])
+    def download(self, request, pk=None):
+        logger.info(self)
         obj = self.get_object()
         file_type = mimetypes.guess_type(obj.name)[0]
-        content_type = file_type if file_type else "application/octet-stream"
-        response = FileResponse(obj.file.file, as_attachment=True, content_type=content_type, filename =obj.name )
-        logger.info(f"Скачивание файла по кнопке. name = {obj.name} ,file_type = {content_type} ")
+        logger.info(mimetypes.guess_type(obj.name))
+        response = FileResponse(obj.file, as_attachment=True)
         obj.last_download = now()
         obj.save()
 
         return response
+        
+class ShareFiles(generics.RetrieveAPIView):
+    queryset = UserFiles.objects.all()
+    serializer_class = UserFilesSerializer
+    lookup_field = 'uuid'
+
+    def retrieve(self, request, *args, **kwargs):
+        obj = self.get_object()
+        response = HttpResponse(obj.file, content_type=obj.type)
+        response['Content-Disposition'] = 'inline;filename=' + obj.name
+        response["Access-Control-Expose-Headers"] = "Content-Disposition"
+        logger.info(f"Свободное скачивание файла по ссылке. {obj.name}")
+        obj.last_download = now()
+        obj.save()
+        return response
+
